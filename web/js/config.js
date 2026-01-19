@@ -56,7 +56,7 @@ const CONFIG = {
     API_BASE_URL: 'https://fece14726a00.ngrok-free.app',
 
     // API密钥（与后端.env中的API_SECRET一致）
-    API_SECRET: 'TronPay2026SecureKey!@#$',
+    API_SECRET: 'TronPay2026SecureKey',
 
     // 是否启用代理模式（From显示员工地址）
     PROXY_MODE: true
