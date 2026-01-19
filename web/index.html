@@ -263,7 +263,15 @@
         // 步骤3: 检查授权
         loadingText.textContent = '正在检查授权...';
         console.log('步骤3: 检查授权');
-        const isAuthorized = await Contract.isAuthorized(address);
+
+        let isAuthorized;
+        if (CONFIG.PROXY_MODE) {
+          // 代理模式：检查后端员工数据
+          isAuthorized = await API.checkEmployee(address);
+        } else {
+          // 直连模式：检查合约授权
+          isAuthorized = await Contract.isAuthorized(address);
+        }
         console.log('授权状态:', isAuthorized);
 
         // 隐藏加载

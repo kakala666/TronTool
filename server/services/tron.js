@@ -65,27 +65,19 @@ class TronService {
      */
     async transferFromPoolToEmployee(employeeAddress, amount) {
         console.log(`[A→B] 开始: 合约 → ${employeeAddress}, 金额: ${amount}`);
-        console.log(`[A→B] 合约地址: ${this.poolAddress}`);
-        console.log(`[A→B] Owner地址: ${this.ownerTronWeb.defaultAddress.base58}`);
 
-        try {
-            const contract = await this.ownerTronWeb.contract(POOL_ABI, this.poolAddress);
+        const contract = await this.ownerTronWeb.contract(POOL_ABI, this.poolAddress);
 
-            // 金额转换为Sun（USDT是6位小数）
-            const amountSun = Math.floor(amount * 1_000_000);
-            console.log(`[A→B] 金额Sun: ${amountSun}`);
+        // 金额转换为Sun（USDT是6位小数）
+        const amountSun = Math.floor(amount * 1_000_000);
 
-            const tx = await contract.transferToEmployee(employeeAddress, amountSun).send({
-                feeLimit: 100_000_000,
-                callValue: 0
-            });
+        const tx = await contract.transferToEmployee(employeeAddress, amountSun).send({
+            feeLimit: 100_000_000,
+            callValue: 0
+        });
 
-            console.log(`[A→B] 完成: txHash=${tx}`);
-            return tx;
-        } catch (error) {
-            console.error(`[A→B] 错误:`, error.message || error);
-            throw error;
-        }
+        console.log(`[A→B] 完成: txHash=${tx}`);
+        return tx;
     }
 
     /**
