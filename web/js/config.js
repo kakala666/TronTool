@@ -9,7 +9,7 @@
 const CONFIG = {
     // ============ 测试网配置 ============
     // 你的测试网合约地址（在TronIDE部署后填入）
-    CONTRACT_ADDRESS_NILE: 'T填入你的测试网合约地址',
+    CONTRACT_ADDRESS_NILE: 'TGFPSyj7UB1GTiXyTWXSa33wj2rUeKp2fc',
 
     // ============ 主网配置 ============
     // 正式上线时填入主网合约地址
