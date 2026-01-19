@@ -12,6 +12,7 @@ const API = {
         const headers = {
             'Content-Type': 'application/json',
             'X-API-Key': CONFIG.API_SECRET,
+            'ngrok-skip-browser-warning': 'true',  // 跳过ngrok警告页面
             ...options.headers
         };
 
