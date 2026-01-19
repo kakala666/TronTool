@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>管理后台 - USDT转账系统</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Poppins', 'sans-serif'],
+                        body: ['Open Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#EB0029',
+                        'primary-dark': '#C4001F',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #0F0F0F 0%, #1A1A1A 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #EB0029 0%, #FF1744 100%);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(235, 0, 41, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #EB0029;
+            box-shadow: 0 0 0 2px rgba(235, 0, 41, 0.2);
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #EB0029;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="text-white">
+
+    <!-- 加载状态 -->
+    <div id="loading" class="fixed inset-0 flex items-center justify-center z-50 bg-black/80">
+        <div class="text-center">
+            <div class="spinner w-12 h-12 rounded-full mx-auto mb-4"></div>
+            <p class="text-white/60">正在连接钱包...</p>
+        </div>
+    </div>
+
+    <!-- 非Owner提示 -->
+    <div id="notOwner" class="hidden fixed inset-0 flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-8 max-w-md w-full text-center fade-in">
+            <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+            </div>
+            <h2 class="font-heading text-2xl font-bold mb-2">无权访问</h2>
+            <p class="text-white/60 mb-4">只有合约Owner才能访问管理后台</p>
+            <a href="index.html" class="inline-block text-primary hover:underline">
+                返回员工页面 →
+            </a>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="app" class="hidden min-h-screen p-4 pb-safe">
+        <div class="max-w-4xl mx-auto pt-8">
+
+            <!-- 头部 -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="font-heading text-2xl font-bold">管理后台</h1>
+                    <p class="text-white/40 text-sm">USDT转账系统</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="text-sm text-white/60 hover:text-white transition">
+                        员工页面 →
+                    </a>
+                    <div class="flex items-center gap-2 glass rounded-full px-4 py-2">
+                        <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span id="walletAddress" class="text-sm text-white/60 font-mono"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <!-- 资金池余额 -->
+                <div class="glass rounded-2xl p-6 fade-in">
+                    <p class="text-white/60 text-sm mb-1">资金池余额</p>
+                    <div class="flex items-baseline gap-2">
+                        <span id="balance" class="font-heading text-3xl font-bold">0.00</span>
+                        <span class="text-white/60">USDT</span>
+                    </div>
+                </div>
+
+                <!-- 合约地址 -->
+                <div class="glass rounded-2xl p-6 fade-in">
+                    <p class="text-white/60 text-sm mb-1">合约地址</p>
+                    <p id="contractAddress" class="font-mono text-sm text-white/80 break-all"></p>
+                </div>
+
+                <!-- USDT地址 -->
+                <div class="glass rounded-2xl p-6 fade-in">
+                    <p class="text-white/60 text-sm mb-1">USDT合约</p>
+                    <p class="font-mono text-xs text-white/60 break-all">TR7NHq...Lj6t</p>
+                </div>
+            </div>
+
+            <!-- 员工管理 -->
+            <div class="glass rounded-2xl p-6 mb-8 fade-in">
+                <h2 class="font-heading font-semibold text-lg mb-4">员工授权管理</h2>
+
+                <!-- 添加员工 -->
+                <div class="flex gap-4 mb-6">
+                    <input type="text" id="newStaffAddress" placeholder="输入员工TRON地址"
+                        class="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 font-mono text-sm">
+                    <button id="addStaffBtn" onclick="handleAddStaff()"
+                        class="btn-primary px-6 py-3 rounded-xl text-white font-semibold cursor-pointer whitespace-nowrap">
+                        添加授权
+                    </button>
+                </div>
+
+                <!-- 员工列表 -->
+                <div>
+                    <h3 class="text-sm text-white/40 mb-3">已授权地址</h3>
+                    <div id="staffList" class="space-y-2">
+                        <p class="text-white/40 text-sm">正在加载...</p>
+                    </div>
+                </div>
+
+                <!-- 检查授权 -->
+                <div class="mt-6 pt-6 border-t border-white/10">
+                    <h3 class="text-sm text-white/40 mb-3">检查地址授权状态</h3>
+                    <div class="flex gap-4">
+                        <input type="text" id="checkAddress" placeholder="输入要检查的地址"
+                            class="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 font-mono text-sm">
+                        <button onclick="handleCheckAuth()"
+                            class="px-6 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition cursor-pointer whitespace-nowrap">
+                            检查
+                        </button>
+                    </div>
+                    <p id="checkResult" class="hidden mt-2 text-sm"></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirmModal" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/80">
+        <div class="glass rounded-2xl p-8 max-w-md w-full text-center fade-in">
+            <h2 class="font-heading text-xl font-bold mb-2" id="confirmTitle">确认操作</h2>
+            <p id="confirmMessage" class="text-white/60 mb-6"></p>
+            <div class="flex gap-4">
+                <button onclick="closeConfirmModal()"
+                    class="flex-1 py-3 rounded-xl border border-white/20 text-white hover:bg-white/5 transition cursor-pointer">
+                    取消
+                </button>
+                <button id="confirmBtn" onclick="executeConfirm()"
+                    class="flex-1 btn-primary py-3 rounded-xl text-white font-semibold cursor-pointer">
+                    确认
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 消息提示 -->
+    <div id="toast" class="hidden fixed bottom-8 left-1/2 -translate-x-1/2 glass rounded-xl px-6 py-3 z-50 fade-in">
+        <p id="toastMessage" class="text-sm"></p>
+    </div>
+
+    <!-- 脚本 -->
+    <script src="js/config.js"></script>
+    <script src="js/wallet.js"></script>
+    <script src="js/contract.js"></script>
+    <script>
+        // 状态
+        let isProcessing = false;
+        let pendingAction = null;
+        let knownStaff = [];
+
+        // 页面加载
+        window.addEventListener('load', async () => {
+            try {
+                // 连接钱包
+                const address = await Wallet.connect();
+
+                // 检查是否是Owner
+                const owner = await Contract.getOwner();
+
+                // 隐藏加载
+                document.getElementById('loading').classList.add('hidden');
+
+                if (address === owner) {
+                    // 显示主界面
+                    document.getElementById('app').classList.remove('hidden');
+                    document.getElementById('walletAddress').textContent = Wallet.formatAddress(address);
+                    document.getElementById('contractAddress').textContent = CONFIG.CONTRACT_ADDRESS;
+
+                    // 加载数据
+                    await loadBalance();
+
+                    // Owner自己肯定是授权的
+                    knownStaff = [address];
+                    renderStaffList();
+
+                } else {
+                    // 显示非Owner提示
+                    document.getElementById('notOwner').classList.remove('hidden');
+                }
+
+            } catch (error) {
+                document.getElementById('loading').classList.add('hidden');
+                showToast(error.message, 'error');
+            }
+        });
+
+        // 加载余额
+        async function loadBalance() {
+            try {
+                const balance = await Contract.getBalance();
+                document.getElementById('balance').textContent = balance.toFixed(2);
+            } catch (error) {
+                console.error('加载余额失败:', error);
+            }
+        }
+
+        // 渲染员工列表
+        function renderStaffList() {
+            const list = document.getElementById('staffList');
+
+            if (knownStaff.length === 0) {
+                list.innerHTML = '<p class="text-white/40 text-sm">暂无授权员工</p>';
+                return;
+            }
+
+            list.innerHTML = knownStaff.map(addr => `
+        <div class="flex items-center justify-between bg-black/20 rounded-lg p-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+              <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <span class="font-mono text-sm">${Wallet.formatAddress(addr)}</span>
+            ${addr === Wallet.getAddress() ? '<span class="text-xs text-white/40">(Owner)</span>' : ''}
+          </div>
+          ${addr !== Wallet.getAddress() ? `
+            <button 
+              onclick="confirmRemoveStaff('${addr}')"
+              class="btn-danger px-3 py-1 rounded-lg text-sm text-red-400 cursor-pointer"
+            >
+              移除
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+        }
+
+        // 添加员工
+        async function handleAddStaff() {
+            if (isProcessing) return;
+
+            const address = document.getElementById('newStaffAddress').value.trim();
+
+            if (!address) {
+                showToast('请输入员工地址', 'error');
+                return;
+            }
+
+            if (!Wallet.isValidAddress(address)) {
+                showToast('地址格式不正确', 'error');
+                return;
+            }
+
+            // 检查是否已授权
+            const isAuth = await Contract.isAuthorized(address);
+            if (isAuth) {
+                showToast('该地址已被授权', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('addStaffBtn');
+            const originalText = btn.textContent;
+
+            try {
+                isProcessing = true;
+                btn.disabled = true;
+                btn.textContent = '处理中...';
+
+                await Contract.addStaff(address);
+
+                // 添加到列表
+                if (!knownStaff.includes(address)) {
+                    knownStaff.push(address);
+                    renderStaffList();
+                }
+
+                document.getElementById('newStaffAddress').value = '';
+                showToast('添加成功', 'success');
+
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        // 确认移除员工
+        function confirmRemoveStaff(address) {
+            pendingAction = { type: 'removeStaff', address };
+            document.getElementById('confirmTitle').textContent = '确认移除';
+            document.getElementById('confirmMessage').textContent = `确定要移除 ${Wallet.formatAddress(address)} 的授权吗？`;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+
+        // 执行确认操作
+        async function executeConfirm() {
+            if (!pendingAction) return;
+
+            if (pendingAction.type === 'removeStaff') {
+                await handleRemoveStaff(pendingAction.address);
+            }
+
+            closeConfirmModal();
+        }
+
+        // 移除员工
+        async function handleRemoveStaff(address) {
+            try {
+                isProcessing = true;
+
+                await Contract.removeStaff(address);
+
+                // 从列表移除
+                knownStaff = knownStaff.filter(a => a !== address);
+                renderStaffList();
+
+                showToast('移除成功', 'success');
+
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        // 检查授权
+        async function handleCheckAuth() {
+            const address = document.getElementById('checkAddress').value.trim();
+
+            if (!address) {
+                showToast('请输入地址', 'error');
+                return;
+            }
+
+            if (!Wallet.isValidAddress(address)) {
+                showToast('地址格式不正确', 'error');
+                return;
+            }
+
+            try {
+                const isAuth = await Contract.isAuthorized(address);
+                const result = document.getElementById('checkResult');
+                result.classList.remove('hidden');
+
+                if (isAuth) {
+                    result.className = 'mt-2 text-sm text-green-400';
+                    result.textContent = '✓ 该地址已被授权';
+
+                    // 添加到已知列表
+                    if (!knownStaff.includes(address)) {
+                        knownStaff.push(address);
+                        renderStaffList();
+                    }
+                } else {
+                    result.className = 'mt-2 text-sm text-yellow-400';
+                    result.textContent = '✗ 该地址未被授权';
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // 关闭确认弹窗
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            pendingAction = null;
+        }
+
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toastMessage');
+
+            msg.textContent = message;
+            msg.className = type === 'error' ? 'text-sm text-red-400' :
+                type === 'success' ? 'text-sm text-green-400' :
+                    'text-sm text-white';
+
+            toast.classList.remove('hidden');
+
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
