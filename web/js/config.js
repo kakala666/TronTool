@@ -53,7 +53,7 @@ const CONFIG = {
 
     // ============ 后端API配置 ============
     // 代理转账后端地址（Ngrok提供的HTTPS地址）
-    API_BASE_URL: 'https://cleta-unviolent-braelyn.ngrok-free.app',
+    API_BASE_URL: 'https://fece14726a00.ngrok-free.app',
 
     // API密钥（与后端.env中的API_SECRET一致）
     API_SECRET: 'TronPay2026SecureKey!@#$',
