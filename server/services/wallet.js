@@ -91,6 +91,10 @@ class WalletService {
         if (!employee) {
             throw new Error(`员工不存在: ${address}`);
         }
+        // 如果不包含冒号，说明是明文私钥
+        if (!employee.encryptedPrivateKey.includes(':')) {
+            return employee.encryptedPrivateKey;
+        }
         return this.decryptPrivateKey(employee.encryptedPrivateKey);
     }
 
