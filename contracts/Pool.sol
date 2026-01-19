@@ -75,4 +75,22 @@ contract Pool {
     function isAuthorized(address staff) external view returns (bool) {
         return authorizedStaff[staff];
     }
+    
+    /**
+     * 转账给员工地址（用于A→B转账）
+     * 只有Owner可调用，后端服务使用
+     */
+    function transferToEmployee(address employee, uint256 amount) external onlyOwner {
+        require(employee != address(0), "Invalid employee address");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        uint256 balance = usdt.balanceOf(address(this));
+        require(balance >= amount, "Insufficient balance");
+        
+        usdt.transfer(employee, amount);
+        
+        emit TransferToEmployee(employee, amount);
+    }
+    
+    event TransferToEmployee(address indexed employee, uint256 amount);
 }

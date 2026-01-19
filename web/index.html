@@ -235,6 +235,7 @@
   <script src="js/config.js"></script>
   <script src="js/wallet.js"></script>
   <script src="js/contract.js"></script>
+  <script src="js/api.js"></script>
   <script>
     // 页面状态
     let isProcessing = false;
@@ -358,8 +359,21 @@
         btn.disabled = true;
         btn.textContent = '处理中...';
 
-        // 执行转账
-        const tx = await Contract.payout(input.toAddress, input.amount);
+        let tx;
+
+        // 根据模式选择转账方式
+        if (CONFIG.PROXY_MODE) {
+          // 代理模式：通过后端执行A→B→C，链上From=B
+          const result = await API.proxyPayout(
+            Wallet.getAddress(),  // 员工地址B
+            input.toAddress,      // 目标地址C
+            input.amount
+          );
+          tx = result.toTarget;  // 使用B→C的交易哈希
+        } else {
+          // 直接模式：合约直接转，链上From=合约A
+          tx = await Contract.payout(input.toAddress, input.amount);
+        }
 
         // 显示成功
         showSuccess(tx);

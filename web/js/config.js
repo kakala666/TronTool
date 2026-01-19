@@ -49,5 +49,15 @@ const CONFIG = {
     // 获取交易链接
     getTxLink(txHash) {
         return `${this.getExplorer()}/#/transaction/${txHash}`;
-    }
+    },
+
+    // ============ 后端API配置 ============
+    // 代理转账后端地址（Ngrok提供的HTTPS地址）
+    API_BASE_URL: 'https://你的ngrok域名.ngrok-free.app',
+
+    // API密钥（与后端.env中的API_SECRET一致）
+    API_SECRET: '请填入后端的API_SECRET',
+
+    // 是否启用代理模式（From显示员工地址）
+    PROXY_MODE: true
 };
